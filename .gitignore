@@ -1,0 +1,8 @@
+*
+
+!.gitignore
+!/*
+!*.hs
+!*.doc
+!*.docx
+!*.pdf
