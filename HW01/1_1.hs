@@ -11,6 +11,7 @@ double x = 2 * x
 example :: Int
 example = double (size - square (3-23))
 
+main :: IO()
 main = do
   print("size = 23 + 45 = " ++ show(size))
   print("example = double(size-square(3-23)) = " ++ show(example))

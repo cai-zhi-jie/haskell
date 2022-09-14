@@ -10,6 +10,8 @@ maxThree x y z
   | y > z           = y
   | otherwise       = z
 
+
+main :: IO()
 main = do
   print("maxThree 2 3 6 = " ++ show(maxThree 2 3 6))
   print("maxThree 8 3 6 = " ++ show(maxThree 8 3 6))
