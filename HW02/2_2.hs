@@ -11,7 +11,7 @@ maxThree x y z
   | otherwise       = z
 
 
-main :: IO()
+main::IO()
 main = do
   print("maxThree 2 3 6 = " ++ show(maxThree 2 3 6))
   print("maxThree 8 3 6 = " ++ show(maxThree 8 3 6))

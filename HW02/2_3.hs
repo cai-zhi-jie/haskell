@@ -15,7 +15,7 @@ mysum x y
   | x < 0   = mysum (addone x) (subone y)
 
 
-main :: IO()
+main::IO()
 main = do
   print("mysum result")
   print("mysum 0 12 = " ++ show(mysum 0 12))
