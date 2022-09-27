@@ -17,3 +17,8 @@ sum1 []=0
 
 --main = print (sum2 [1..10000000] 0 ) 
 main = print (sum1 [1..10000000] ) 
+
+{-
+>ghc -rtsopts -O2 3.hs
+>/usr/bin/time -p ./3 +RTS -K1280M –s -RTS
+-}
