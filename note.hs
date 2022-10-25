@@ -146,3 +146,8 @@ returnLoan db book = [(borrower, book’) | (borrower, book’) <- db, book’ /
 --也可以构建无穷列表？[1..]
 
 --函数式编程禁止inplace的修改，要更新数据库就必须要产生新的数据库
+
+
+
+
+
