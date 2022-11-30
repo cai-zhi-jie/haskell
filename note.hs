@@ -153,3 +153,9 @@ returnLoan db book = [(borrower, book’) | (borrower, book’) <- db, book’ /
 
 --常用函数 
 show :: Show a => a -> String
+
+
+do x <- e
+   c
+等价于
+e >>= (\x -> do c)
