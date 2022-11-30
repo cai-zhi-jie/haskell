@@ -9,6 +9,9 @@ main = do
   print $ getRList 10 10
   print $ getRList 11 10
 -}
+-- cabal update
+-- cabal sandbox init
+-- cabal install gi-gtk
 -- cabal exec -- ghc Main.hs
 import Graphics.UI.WX
 
