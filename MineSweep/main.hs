@@ -9,7 +9,7 @@ main = do
   print $ getRList 10 10
   print $ getRList 11 10
 -}
-
+-- cabal exec -- ghc Main.hs
 import Graphics.UI.WX
 
 main :: IO ()
