@@ -2,41 +2,36 @@
 Generate Random number list
 sorted
 -}
-module MyRandom (getRList) where
+module MyRandom (getRList, getR) where
 
 import Data.List
 import System.Random
 
-seed :: Int
-seed = 1234
+import Util
 
-unique :: (Ord a, Eq a) => [a] -> [a]
-unique xs = remove $ sort xs
-  where
-    remove []  = []
-    remove [x] = [x]
-    remove (x1:x2:xs)
-      | x1 == x2  = remove (x1:xs)
-      | otherwise = x1 : remove (x2:xs)
 
-getRandomList :: Int-> Int -> Int -> [Int]
+getRandomList :: RandomGen g => Int-> Int -> Int -> g -> [Int]
 -- k : unique list length
 -- m : sample list length
 -- n : sample range (1, n) 
-getRandomList k m n 
+getRandomList k m n seed
   | length result == k = result
-  | otherwise = (getRandomList k (m+k) n)
-  where result = take k $ nub $ take m $ randomRs (1, n) (mkStdGen seed)
+  | otherwise = (getRandomList k (m+k) n seed)
+  where result = take k $ nub $ take m $ randomRs (0, n-1) seed
 
-getRList :: Int -> Int -> [Int]
+getRList :: RandomGen g => Int -> Int -> g -> [Int]
 -- k : unique sorted list length
 -- n : sample range (1, n) 
-getRList 0 _ = []
-getRList k n 
+getRList 0 _ _ = []
+getRList k n seed
  | k < 0 = []
- | k < n = sort $ getRandomList k k n
- | otherwise = [1..n]
+ | k < n = sort $ getRandomList k k n seed
+ | otherwise = [0..(n-1)]
 
+getR :: RandomGen g => Int -> g -> Int
+getR n seed 
+  | n < 0 = -1
+  | otherwise = head $ randomRs (0, n-1) seed
 
 ------Test------
 {-

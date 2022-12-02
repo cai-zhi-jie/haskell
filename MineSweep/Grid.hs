@@ -452,14 +452,14 @@ miningByAI vgrid sgrid seed
   | length sourceList == 0 = rsgrid
   | dsgrid /= sgrid = dsgrid
   | isgrid /= sgrid = isgrid
-  | psgrid /= sgrid = psgrid
+  -- | psgrid /= sgrid = psgrid
   | otherwise = rsgrid 
     where 
       sourceList = getSourceId sgrid
       rsgrid = randomMine vgrid sgrid (getNonVisitedId sgrid) seed
       dsgrid = deterministicMine vgrid sgrid
       isgrid = inferenceMine vgrid sgrid
-      psgrid = probabilisticMine vgrid sgrid seed
+      -- psgrid = probabilisticMine vgrid sgrid seed
 
 
 updateGameStateByAI :: [[Int]] -> [[Int]] -> IO ()
@@ -542,35 +542,60 @@ updateGameStateAssisted vgrid sgrid = do
       updateGameStateAssisted vgrid nsgrid
       return ()
 
-
-vgrid = [[1,-1,1],[1,1,1],[0,0,0]]
-sgrid = [[0,0,0],[1,1,1],[1,1,1]]
-    
-
 main = do
   -- Entrypoint to the game loop
-  
+  putStrLn "Enter the number of rows:"
+  row <- getInt
+  putStrLn "Enter the number of columns:"
+  col <- getInt
+  putStrLn "***** MineSweep *****"
   seed <- newStdGen
-  print $ inferenceMine vgrid sgrid
-  print $ probabilisticMine vgrid sgrid seed
+  let vgrid = initGridValue $ initGridWithRandomBomb row col seed
+  let sgrid = getBlankGrid row col
+  putStrLn $ "total bomb/ flaged bomb : " ++ show(countTotalBomb sgrid) ++ "/" ++ show(countFlag sgrid)
+  dispGrid vgrid sgrid
+  updateGameStateAssisted vgrid sgrid
   return ()
 
 -- main = do
---     print $ enumPossibility [1,2,2]
---     print $ inference ([1,2,3], [[1,1,2],[1,2,2],[1,2,1]])
---     print $ calProbability ([1,2,3], [[1,2,1],[1,1,2],[1,2,1],[2,2,2]])
---     seed <- newStdGen
---     print $ getR 0 seed
+--   seed <- newStdGen
+--   let vgrid = initGridValue $ initGridWithRandomBomb 5 5 seed
+--   let sgrid = sweep vgrid (getBlankGrid 5 5) 12
+--   printGrid vgrid
+--   printGrid sgrid
+--   dispGrid vgrid sgrid
+--   print $ getSourceId sgrid
+--   print $ getContourId sgrid $ getSourceId sgrid
+
 
 -- main = do 
---   print $ getRList (-1) 10
---   print $ getRList 0 10
---   print $ getRList 1 10
---   print $ getRList 7 10
---   print $ getRList 10 10
---   print $ getRList 11 10
+--   print $ getBlankGrid 5 5
+--   let vgrid = initGridValue $ initGridWithRandomBomb 5 5
+--   printGrid vgrid
+--   let sgrid = bfs (getBlankGrid 5 5) vgrid [5,24]
+--   let grid = maskGrid vgrid sgrid
+--   printGrid grid
+  -- printGrid (addBombById (getBlankGrid 5 5) $ coor2index (getBlankGrid 5 5) 1 2)
+  -- dispGrid (addBombById (getBlankGrid 5 5) $ coor2index (getBlankGrid 5 5) 1 2) (getBlankGrid 5 5)
+  -- dispGrid (addBombById (getBlankGrid 5 5) $ coor2index (getBlankGrid 5 5) 1 2) (getBlankGrid 5 5)
+  -- printGrid $ initGridWithRandomBomb 5 5
+  -- printGrid $ initGridValue $ initGridWithRandomBomb 5 5
+  -- printGrid $ addBombById (getBlankGrid 5 5) $ coor2index (getBlankGrid 5 5) 1 2
+  -- printGrid $ addBombById (getBlankGrid 5 5) 4
+  -- print $ index2coor (getBlankGrid 5 5) 4
+  -- print $ getNeighbor (getBlankGrid 5 5) 4
+  -- printGrid $ addBombById (getBlankGrid 5 5) 10
+  -- print $ index2coor (getBlankGrid 5 5) 10
+  -- print $ getNeighbor (getBlankGrid 5 5) 10
+  -- printGrid $ addBombById (getBlankGrid 5 5) 12
+  -- print $ index2coor (getBlankGrid 5 5) 12
+  -- print $ getNeighbor (getBlankGrid 5 5) 12
+  -- print $ index2coor (getBlankGrid 5 5) 11
+  -- print $ index2coor (getBlankGrid 5 5) 30
+  -- print $ index2coor (getBlankGrid 5 5) (-10)
+  -- print $ index2coor (getBlankGrid 5 5) 12
+  -- print $ coor2index (getBlankGrid 5 5) 4 4
+  -- print $ coor2index (getBlankGrid 5 5) 5 5
+  -- print $ coor2index (getBlankGrid 5 5) 5 (-1)
+  -- print $ coor2index (getBlankGrid 5 5) (-1) (-1)
 
--- cabal update
--- cabal sandbox init
--- cabal install gi-gtk
--- cabal exec -- ghc Main.hs
