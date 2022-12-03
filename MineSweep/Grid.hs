@@ -23,7 +23,11 @@ visitedId = 1
 flagId :: Int
 flagId = 2
 bombRatio :: Double
-bombRatio = 0.16
+bombRatio = 0.1
+inferenceRange :: Int
+inferenceRange = 10
+inferenceRangeOverlap :: Int
+inferenceRangeOverlap = 8
 
 genGridByValue :: Int -> Int -> Int -> [[Int]]
 genGridByValue row col v = [[v | c <- [0..(col-1)]] | r <- [0..(row-1)]]
@@ -304,7 +308,7 @@ getSourceId sgrid = filter isSurroundingNotAllVisited $ filter (isVisited sgrid)
     col = length $ sgrid !! 0 
     binNum = row * col
     -- isVisited = (\x -> (getElementById sgrid x) == visitedId)
-    isSurroundingNotAllVisited id = (0 /= length (filter (\x -> not $ isVisited sgrid x) $ getSurroundingId sgrid id))
+    isSurroundingNotAllVisited id = (0 /= length (filter (\x -> isNonVisited sgrid x) $ getSurroundingId sgrid id))
 
 getContourId :: [[Int]] -> [Int] -> [Int]
 getContourId sgrid sourceList = filter (isNonVisited sgrid) $ unique $ concat $ map (getSurroundingId sgrid) sourceList 
@@ -344,7 +348,7 @@ determineSurrounding vgrid sgrid id
 deterministicMine :: [[Int]] -> [[Int]] -> [[Int]]
 deterministicMine vgrid sgrid = foldl (determineSurrounding vgrid) sgrid (getSourceId sgrid) 
 
-{-- %%%%%%%%%%%%%%%% INFERENCE/PROBABILISTIC SEARCH %%%%%%%%%%%%%%%%%% --}
+{-- %%%%%%%%%%%%%%%% INFERENCE SEARCH %%%%%%%%%%%%%%%%%% --}
 -- 
 -- vgrid sgrid id is_legal
 isLegal :: [[Int]] -> [[Int]] -> Int -> Bool
@@ -361,7 +365,7 @@ isLegalList vgrid sgrid idList = foldr (&&) True (map (isLegal vgrid sgrid) idLi
 
 -- contour_list all_possible_state
 enumPossibility :: [Int] -> [[Int]]
-enumPossibility [] = []
+enumPossibility [] = [[]]
 enumPossibility (x:xs) = [visitedId:line | line <- subsequence] ++ [flagId:line | line <- subsequence]
   where
     subsequence = enumPossibility xs
@@ -378,7 +382,7 @@ getLegalGuess :: [[Int]] -> [[Int]] -> ([Int], [[Int]])
 getLegalGuess vgrid sgrid = (contourId, legalGuess)
   where
     sourceId = getSourceId sgrid
-    contourId = take 10 $ getContourId sgrid sourceId
+    contourId = take 12 $ getContourId sgrid sourceId
     allGuess = enumPossibility contourId
     legalGuess = filter (isGuessLegal vgrid sgrid sourceId contourId) allGuess
 
@@ -393,15 +397,57 @@ inference (contourId, legalGuess) = (visitList, flagList)
     visitList = filter (\x -> x >= 0) $ map (\(x, y) -> if y == visitedId then x else -1) (zip contourId mergeResult)
     flagList = filter (\x -> x >= 0) $ map (\(x, y) -> if y == flagId then x else -1) (zip contourId mergeResult)
 
+
 -- vgrid sgrid nsgrid
 inferenceMine :: [[Int]] -> [[Int]] -> [[Int]]
-inferenceMine vgrid sgrid = fssgrid
+inferenceMine vgrid sgrid = inferenceStepByStep vgrid sgrid sourceId contourId contourId
   where
-    legalGuess = getLegalGuess vgrid sgrid
+    sourceId = getSourceId sgrid
+    contourId = getContourId sgrid sourceId
+
+inferenceStepByStep :: [[Int]] -> [[Int]] -> [Int] -> [Int] -> [Int] -> [[Int]]
+inferenceStepByStep _ sgrid _ _ [] = sgrid
+inferenceStepByStep vgrid sgrid sourceId contourId (id:ids) 
+  | ids == [] = nsgrid
+  | sgrid /= nsgrid = nsgrid
+  | sgrid == nsgrid = inferenceStepByStep vgrid sgrid sourceId contourId ids'
+  | otherwise = sgrid
+  where
+    nsgrid = inferenceOneStep vgrid sgrid sourceId contourId id
+    ids' = ids
+    -- ids' = filter (\x -> not $ elem x (bfsSurrounding vgrid inferenceRangeOverlap contourId [] [id])) ids
+
+inferenceOneStep :: [[Int]] -> [[Int]] -> [Int] -> [Int] -> Int -> [[Int]]
+inferenceOneStep vgrid sgrid sourceId contourId id = fssgrid
+  where
+    legalGuess = getLegalGuessById vgrid sgrid sourceId contourId id
     (visitList, flagList) = inference legalGuess
     ssgrid = foldl (sweep vgrid) sgrid visitList
     fssgrid = foldl (setFlag vgrid) ssgrid flagList
 
+
+-- vgrid sgrid sourceId contourId id (contourId, legalGuess)
+getLegalGuessById :: [[Int]] -> [[Int]] -> [Int] -> [Int] -> Int -> ([Int], [[Int]])
+getLegalGuessById vgrid sgrid sourceId contourId id = (cid, legalGuess)
+  where
+    cid = bfsSurrounding vgrid inferenceRange contourId [] [id]
+    allGuess = enumPossibility cid
+    legalGuess = filter (isGuessLegal vgrid sgrid sourceId cid) allGuess
+
+
+-- grid list start_id result
+bfsSurrounding :: [[Int]] -> Int -> [Int] -> [Int] -> [Int] -> [Int]
+bfsSurrounding grid num tidList hidList [] = hidList
+bfsSurrounding grid num tidList hidList (id:ids) 
+  | len >= num = take num result
+  | otherwise = bfsSurrounding grid num tidList result (ids++cidList')
+    where 
+      cidList = filter (\x -> elem x tidList) $ getSurroundingId grid id
+      cidList' = filter (\x -> not $ elem x hidList) cidList
+      result = (hidList ++ cidList')
+      len = length result
+
+{-- %%%%%%%%%%%%%%%% PROBABILISTIC SEARCH %%%%%%%%%%%%%%%%%% --}
 
 listMax :: [Int] -> Int
 listMax [] = 0
@@ -487,22 +533,6 @@ isAssistedOperation opName
   | opName == "D" || opName == "d" || opName == "I" || opName == "i" || opName == "P" || opName == "p" || opName == "R" || opName == "r" = True
   | otherwise = False 
 
--- main = do
---   -- Entrypoint to the game loop
---   putStrLn "Enter the number of rows:"
---   row <- getInt
---   putStrLn "Enter the number of columns:"
---   col <- getInt
---   let row = 20
---   let col = 20
---   putStrLn "***** MineSweep *****"
---   seed <- newStdGen
---   let vgrid = initGridValue $ initGridWithRandomBomb row col seed
---   let sgrid = getBlankGrid row col
---   putStrLn $ "total bomb/ flaged bomb : " ++ show(countTotalBomb sgrid) ++ "/" ++ show(countFlag sgrid)
---   dispGrid vgrid sgrid
---   updateGameStateByAI vgrid sgrid
---   return ()
 
 assistedMine :: RandomGen g => [[Int]] -> [[Int]] -> String -> g -> [[Int]]
 assistedMine vgrid sgrid opName seed 
@@ -544,18 +574,37 @@ updateGameStateAssisted vgrid sgrid = do
 
 main = do
   -- Entrypoint to the game loop
-  putStrLn "Enter the number of rows:"
-  row <- getInt
-  putStrLn "Enter the number of columns:"
-  col <- getInt
+  -- putStrLn "Enter the number of rows:"
+  -- row <- getInt
+  -- putStrLn "Enter the number of columns:"
+  -- col <- getInt
+  let row = 20
+  let col = 20
   putStrLn "***** MineSweep *****"
   seed <- newStdGen
   let vgrid = initGridValue $ initGridWithRandomBomb row col seed
   let sgrid = getBlankGrid row col
   putStrLn $ "total bomb/ flaged bomb : " ++ show(countTotalBomb sgrid) ++ "/" ++ show(countFlag sgrid)
   dispGrid vgrid sgrid
-  updateGameStateAssisted vgrid sgrid
+  updateGameStateByAI vgrid sgrid
   return ()
+
+-- main = do
+--   -- Entrypoint to the game loop
+--   -- putStrLn "Enter the number of rows:"
+--   -- row <- getInt
+--   -- putStrLn "Enter the number of columns:"
+--   -- col <- getInt
+--   let row = 20
+--   let col = 20
+--   putStrLn "***** MineSweep *****"
+--   seed <- newStdGen
+--   let vgrid = initGridValue $ initGridWithRandomBomb row col seed
+--   let sgrid = getBlankGrid row col
+--   putStrLn $ "total bomb/ flaged bomb : " ++ show(countTotalBomb sgrid) ++ "/" ++ show(countFlag sgrid)
+--   dispGrid vgrid sgrid
+--   updateGameStateAssisted vgrid sgrid
+--   return ()
 
 -- main = do
 --   seed <- newStdGen

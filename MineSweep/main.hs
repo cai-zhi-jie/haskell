@@ -2,6 +2,10 @@
 Define Grid operation
 -}
 
+{-
+Define Grid operation
+-}
+
 import Data.Foldable (toList)
 import Data.Sequence (fromList, update)
 import System.Random
@@ -24,6 +28,8 @@ flagId :: Int
 flagId = 2
 bombRatio :: Double
 bombRatio = 0.16
+inferenceRange :: Int
+inferenceRange = 12
 
 genGridByValue :: Int -> Int -> Int -> [[Int]]
 genGridByValue row col v = [[v | c <- [0..(col-1)]] | r <- [0..(row-1)]]
@@ -344,7 +350,7 @@ determineSurrounding vgrid sgrid id
 deterministicMine :: [[Int]] -> [[Int]] -> [[Int]]
 deterministicMine vgrid sgrid = foldl (determineSurrounding vgrid) sgrid (getSourceId sgrid) 
 
-{-- %%%%%%%%%%%%%%%% INFERENCE/PROBABILISTIC SEARCH %%%%%%%%%%%%%%%%%% --}
+{-- %%%%%%%%%%%%%%%% INFERENCE SEARCH %%%%%%%%%%%%%%%%%% --}
 -- 
 -- vgrid sgrid id is_legal
 isLegal :: [[Int]] -> [[Int]] -> Int -> Bool
@@ -361,7 +367,7 @@ isLegalList vgrid sgrid idList = foldr (&&) True (map (isLegal vgrid sgrid) idLi
 
 -- contour_list all_possible_state
 enumPossibility :: [Int] -> [[Int]]
-enumPossibility [] = []
+enumPossibility [] = [[]]
 enumPossibility (x:xs) = [visitedId:line | line <- subsequence] ++ [flagId:line | line <- subsequence]
   where
     subsequence = enumPossibility xs
@@ -378,7 +384,7 @@ getLegalGuess :: [[Int]] -> [[Int]] -> ([Int], [[Int]])
 getLegalGuess vgrid sgrid = (contourId, legalGuess)
   where
     sourceId = getSourceId sgrid
-    contourId = take 10 $ getContourId sgrid sourceId
+    contourId = take 12 $ getContourId sgrid sourceId
     allGuess = enumPossibility contourId
     legalGuess = filter (isGuessLegal vgrid sgrid sourceId contourId) allGuess
 
@@ -402,6 +408,19 @@ inferenceMine vgrid sgrid = fssgrid
     ssgrid = foldl (sweep vgrid) sgrid visitList
     fssgrid = foldl (setFlag vgrid) ssgrid flagList
 
+-- grid list start_id result
+bfsSurrounding :: [[Int]] -> [Int] -> [Int] -> [Int] -> [Int]
+bfsSurrounding grid tidList hidList [] = hidList
+bfsSurrounding grid tidList hidList (id:ids) 
+  | len >= inferenceRange = take inferenceRange result
+  | otherwise = bfsSurrounding grid tidList result (ids++cidList)
+    where 
+      cidList = filter (\x -> elem x tidList) $ getSurroundingId grid id
+      cidList' = filter (\x -> not $ elem x hidList) cidList
+      result = (hidList ++ cidList')
+      len = length result
+
+{-- %%%%%%%%%%%%%%%% PROBABILISTIC SEARCH %%%%%%%%%%%%%%%%%% --}
 
 listMax :: [Int] -> Int
 listMax [] = 0
@@ -452,14 +471,14 @@ miningByAI vgrid sgrid seed
   | length sourceList == 0 = rsgrid
   | dsgrid /= sgrid = dsgrid
   | isgrid /= sgrid = isgrid
-  | psgrid /= sgrid = psgrid
+  -- | psgrid /= sgrid = psgrid
   | otherwise = rsgrid 
     where 
       sourceList = getSourceId sgrid
       rsgrid = randomMine vgrid sgrid (getNonVisitedId sgrid) seed
       dsgrid = deterministicMine vgrid sgrid
       isgrid = inferenceMine vgrid sgrid
-      psgrid = probabilisticMine vgrid sgrid seed
+      -- psgrid = probabilisticMine vgrid sgrid seed
 
 
 updateGameStateByAI :: [[Int]] -> [[Int]] -> IO ()
@@ -516,6 +535,15 @@ updateGameStateAssisted :: [[Int]] -> [[Int]] -> IO ()
 updateGameStateAssisted vgrid sgrid = do
   let row = length vgrid
   let col = length $ vgrid !! 0
+  
+  let s = getSourceId sgrid
+  print s
+  let c = getContourId sgrid s
+  print c
+  print (c!!0)
+  let b = bfsSurrounding sgrid c [] [c!!0]
+  print b
+
   putStrLn $ "input operation: \n[M]ine \n[F]lag \n[U]nflag \nassistance: \n[D]eteministicMine \n[I]nferenceMine \n[P]robabilisticMine \n[R]andomMine \n[E]xit"
   opName <- getLine
   when (opName == "E" || opName == "e") exit
@@ -542,18 +570,41 @@ updateGameStateAssisted vgrid sgrid = do
       updateGameStateAssisted vgrid nsgrid
       return ()
 
-
-vgrid = [[1,-1,1],[1,1,1],[0,0,0]]
-sgrid = [[0,0,0],[1,1,1],[1,1,1]]
-    
-
 main = do
   -- Entrypoint to the game loop
-  
+  -- putStrLn "Enter the number of rows:"
+  -- row <- getInt
+  -- putStrLn "Enter the number of columns:"
+  -- col <- getInt
+  let row = 10
+  let col = 10
+  putStrLn "***** MineSweep *****"
   seed <- newStdGen
-  print $ inferenceMine vgrid sgrid
-  print $ probabilisticMine vgrid sgrid seed
+  let vgrid = initGridValue $ initGridWithRandomBomb row col seed
+  let sgrid' = getBlankGrid row col
+  let sgrid = sweep vgrid sgrid' 0
+  putStrLn $ "total bomb/ flaged bomb : " ++ show(countTotalBomb sgrid) ++ "/" ++ show(countFlag sgrid)
+  dispGrid vgrid sgrid
+  updateGameStateAssisted vgrid sgrid
   return ()
+
+-- vgrid = [[1,-1,1],[1,1,1],[0,0,0]]
+-- sgrid = [[0,0,0],[1,1,1],[1,1,1]]
+    
+
+-- main = do
+--   -- Entrypoint to the game loop
+  
+--   seed <- newStdGen
+--   let s = getSourceId sgrid
+--   print $ s
+--   let c = getContourId sgrid s
+--   print $ c
+--   print $ enumPossibility c
+--   print $ getLegalGuess vgrid sgrid
+--   print $ inferenceMine vgrid sgrid
+--   -- print $ probabilisticMine vgrid sgrid seed
+--   return ()
 
 -- main = do
 --     print $ enumPossibility [1,2,2]
