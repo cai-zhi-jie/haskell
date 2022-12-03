@@ -1,14 +1,12 @@
 {-
 Some Tool Function
 -}
-module Util (unique, getInt, getUnitList) where
+module Util  where
 
-import Control.Concurrent (threadDelay)
 import Data.List
 
 getInt :: IO Int
 getInt = fmap read getLine
-
 
 unique :: (Ord a, Eq a) => [a] -> [a]
 unique xs = remove $ sort xs
@@ -19,7 +17,14 @@ unique xs = remove $ sort xs
       | x1 == x2  = remove (x1:xs)
       | otherwise = x1 : remove (x2:xs)
 
-      
 getUnitList :: Int -> Int -> [Int]
 getUnitList e 0 = []
 getUnitList e n = e : (getUnitList e (n-1))
+
+listMax :: [Int] -> Int
+listMax [] = 0
+listMax (x:xs) 
+  | x > m = x
+  | otherwise = m
+    where
+      m = listMax xs
