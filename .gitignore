@@ -2,7 +2,12 @@
 
 !.gitignore
 !/*
+!/*/*
 !*.hs
 !*.doc
 !*.docx
 !*.pdf
+
+*.hi
+*.o
+*.exe
