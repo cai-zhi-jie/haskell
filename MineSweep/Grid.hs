@@ -23,7 +23,7 @@ bombRatio = 0.16
 inferenceRange :: Int
 inferenceRange = 10
 inferenceRangeOverlap :: Int
-inferenceRangeOverlap = 8
+inferenceRangeOverlap = 6
 
 genGridByValue :: Int -> Int -> Int -> [[Int]]
 genGridByValue row col v = [[v | c <- [0..(col-1)]] | r <- [0..(row-1)]]
@@ -165,13 +165,13 @@ updateGridValueById grid id = updateElementByFunction grid countSurroundingBomb 
 --       neighborId = getSurroundingId vgrid id
 
 isVisited :: [[Int]] -> Int -> Bool
-isVisited sgrid id = getElementById sgrid id == visitedId
+isVisited sgrid id = isValue sgrid visitedId id
 
 isNonVisited :: [[Int]] -> Int -> Bool
-isNonVisited sgrid id = getElementById sgrid id == nonVisitedId
+isNonVisited sgrid id = isValue sgrid nonVisitedId id
 
 isFlag :: [[Int]] -> Int -> Bool
-isFlag sgrid id = getElementById sgrid id == flagId
+isFlag sgrid id = isValue sgrid flagId id
 
 isValue :: [[Int]] -> Int -> Int -> Bool
 isValue sgrid value id = getElementById sgrid id == value

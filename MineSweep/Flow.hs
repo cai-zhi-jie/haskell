@@ -36,8 +36,9 @@ evalState vgrid sgrid= do
   putStrLn $ "total bomb/ flaged bomb : " ++ show(countGrid vgrid bombId) ++ "/" ++ show(countGrid sgrid flagId)
   dispGrid vgrid sgrid
   when (evalWin vgrid sgrid) win
-  when (evalLoss vgrid sgrid) loss
+  when (evalLoss vgrid sgrid) $ loss vgrid sgrid
   return ()
+
 
 evalWin :: [[Int]] -> [[Int]] -> Bool
 evalWin vgrid sgrid = (0 == length (filter remain pair)) && (0 == length (filter wrongFlag pair)) && (0 == length (filter bombNum pair))
@@ -58,10 +59,16 @@ win = do
   putStrLn "Win!!!"
   resetState
 
-loss :: IO()
-loss = do
+loss :: [[Int]] -> [[Int]] -> IO()
+loss vgrid sgrid= do
+  dispGrid vgrid lsgrid
   putStrLn "Failed!!!"
   resetState
+    where
+      row = length vgrid
+      col = length $ vgrid !! 0
+      bombList = filter (\id -> isValue vgrid bombId id) [0..(row*col - 1)]
+      lsgrid = foldl (\g n -> updateElement g visitedId n) sgrid bombList
 
 resetState :: IO ()
 resetState = do
@@ -103,7 +110,7 @@ updateManual vgrid sgrid op = do
 updateStateAutomatic :: RandomGen g => [[Int]] -> [[Int]] -> String -> g -> [[Int]]
 updateStateAutomatic vgrid sgrid op seed 
   | op == "A" = automaticMine vgrid sgrid seed
-  | op == "R" = randomMine vgrid sgrid (getNonVisitedId sgrid) seed
+  | op == "R" = randomMine vgrid sgrid seed
   | op == "D" = deterministicMine vgrid sgrid
   | op == "I" = inferenceMine vgrid sgrid
   | op == "P" = probabilisticMine vgrid sgrid seed

@@ -46,9 +46,10 @@ unsetFlag vgrid sgrid id
 
 {-- %%%%%%%%%%%%%%%% RANDOM SEARCH %%%%%%%%%%%%%%%%%% --}
 -- vgrid sgrid candidate newStateGrid
-randomMine :: RandomGen g => [[Int]] -> [[Int]] -> [Int] -> g -> [[Int]]
-randomMine vgrid sgrid list seed = sweep vgrid sgrid id
+randomMine :: RandomGen g => [[Int]] -> [[Int]] -> g -> [[Int]]
+randomMine vgrid sgrid seed = sweep vgrid sgrid id
   where
+    list = getNonVisitedId sgrid
     id = list !! (getR (length list) seed)
 
 {-- %%%%%%%%%%%%%%%% DETERMINISTIC SEARCH %%%%%%%%%%%%%%%%%% --}
@@ -117,8 +118,8 @@ inferenceStepByStep vgrid sgrid sourceId contourId (id:ids)
   | otherwise = sgrid
   where
     nsgrid = inferenceOneStep vgrid sgrid sourceId contourId id
-    ids' = ids
-    -- ids' = filter (\x -> not $ elem x (bfsSurrounding vgrid inferenceRangeOverlap contourId [] [id])) ids
+    -- ids' = ids
+    ids' = filter (\x -> not $ elem x (bfsSurrounding vgrid inferenceRangeOverlap contourId [] [id])) ids
 
 inferenceOneStep :: [[Int]] -> [[Int]] -> [Int] -> [Int] -> Int -> [[Int]]
 inferenceOneStep vgrid sgrid sourceId contourId id = fssgrid
@@ -176,7 +177,7 @@ getLegalGuess :: [[Int]] -> [[Int]] -> ([Int], [[Int]])
 getLegalGuess vgrid sgrid = (contourId, legalGuess)
   where
     sourceId = getSourceId sgrid
-    contourId = take 10 $ getContourId sgrid sourceId
+    contourId = take inferenceRange $ getContourId sgrid sourceId
     allGuess = enumPossibility contourId
     legalGuess = filter (isGuessLegal vgrid sgrid sourceId contourId) allGuess
 
@@ -219,7 +220,7 @@ automaticMine vgrid sgrid seed
   | otherwise = rsgrid 
     where 
       sourceList = getSourceId sgrid
-      rsgrid = randomMine vgrid sgrid (getNonVisitedId sgrid) seed
+      rsgrid = randomMine vgrid sgrid seed
       dsgrid = deterministicMine vgrid sgrid
       isgrid = inferenceMine vgrid sgrid
       -- psgrid = probabilisticMine vgrid sgrid seed

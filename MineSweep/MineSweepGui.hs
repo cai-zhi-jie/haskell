@@ -128,7 +128,7 @@ newGridByState window grid stateButton vgrid sgrid = do
     let y = quot n col
     createAndAttachBtn (T.pack[getElementById cgrid n]) window grid' stateButton "" vgrid (int2int32 x, int2int32 y, 1, 1 ) n gridButtonCallback
   -- init function button
-  let label = if (evalWin vgrid sgrid) then "YOU WIN!!!" else (if (evalLoss vgrid sgrid) then "YOU LOSS!!!" else ("Unflaged bomb: " ++ show(countGrid vgrid bombId)))
+  let label = if (evalWin vgrid sgrid) then "YOU WIN!!!" else (if (evalLoss vgrid sgrid) then "YOU LOSS!!!" else ("Unflaged bomb: " ++ show(max 0 ((countGrid vgrid bombId) - (countGrid sgrid flagId)))))
 
   createAndAttachBtn (T.pack("Reset")) window grid' stateButton "R" vgrid (0, int2int32(row), 2, 1 ) 0 restartCallback
   createAndAttachBtn (T.pack(label)) window grid' stateButton "R" vgrid (2, int2int32(row), 8, 1 ) 0 voidCallback
@@ -231,8 +231,8 @@ int2int32 i = fromIntegral (i :: Int) :: Int32
 
 genGrid :: IO ()
 genGrid = do
-  let row = 10
-  let col = 10
+  let row = 5
+  let col = 5
   seed <- newStdGen
   let vgrid = initGridValue $ initGridWithRandomBomb row col bombRatio seed
   let sgrid = getBlankGrid row col
