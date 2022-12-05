@@ -136,31 +136,33 @@ countSurroundingBomb grid id
 -- foldl :: Foldable t => (b -> a -> b) -> b -> t a -> b
 -- b = [[Int]]
 -- a = Int
-initGridWithRandomBomb :: RandomGen g => Int -> Int -> g -> [[Int]]
-initGridWithRandomBomb row col seed = foldl addBombById grid $ getRList bombNum binNum seed
+initGridWithRandomBomb :: RandomGen g => Int -> Int -> Double -> g -> [[Int]]
+initGridWithRandomBomb row col bombratio seed = foldl addBombById grid $ getRList bombNum binNum seed
   where 
     grid = getBlankGrid row col
     binNum = row * col
-    bombNum = truncate $ toRational bombRatio * toRational binNum
+    bombNum = truncate $ toRational bombratio * toRational binNum
 
 -- update the grid value of surrounding bomb number by index
 updateGridValueById :: [[Int]] -> Int -> [[Int]]
 updateGridValueById grid id = updateElementByFunction grid countSurroundingBomb id
 
--- breadth first search 
--- state_grid -> value_grid -> id -> updated_state_grid
-bfs :: [[Int]] -> [[Int]] -> [Int] -> [[Int]]
-bfs sgrid vgrid [] = sgrid
-bfs sgrid vgrid (id:ids) 
-  -- for visited id, try next
-  | getElementById sgrid id == visitedId = bfs sgrid vgrid ids
-  -- for univsited
-  -- for bomb id or value-non-0 id, mark visited and failed
-  | getElementById vgrid id /= 0 = bfs (updateElement sgrid visitedId id) vgrid ids
-  -- for value-eq-0 id, mark visited and search neighbor
-  | otherwise = bfs (updateElement sgrid visitedId id) vgrid (ids ++ neighborId)
-    where
-      neighborId = getSurroundingId vgrid id
+-- -- breadth first search 
+-- -- state_grid -> value_grid -> id -> updated_state_grid
+-- bfs :: [[Int]] -> [[Int]] -> [Int] -> [[Int]]
+-- bfs sgrid vgrid [] = sgrid
+-- bfs sgrid vgrid (id:ids) 
+--   -- for visited id, try next
+--   | getElementById sgrid id == visitedId = bfs sgrid vgrid ids
+--   -- -- for flag id, try next
+--   -- | getElementById sgrid id == flagId = bfs sgrid vgrid ids
+--   -- for univsited
+--   -- for bomb id or value-non-0 id, mark visited and failed
+--   | getElementById vgrid id /= 0 = bfs (updateElement sgrid visitedId id) vgrid ids
+--   -- for value-eq-0 id, mark visited and search neighbor
+--   | otherwise = bfs (updateElement sgrid visitedId id) vgrid (ids ++ neighborId)
+--     where
+--       neighborId = getSurroundingId vgrid id
 
 isVisited :: [[Int]] -> Int -> Bool
 isVisited sgrid id = getElementById sgrid id == visitedId
@@ -172,7 +174,7 @@ isFlag :: [[Int]] -> Int -> Bool
 isFlag sgrid id = getElementById sgrid id == flagId
 
 isValue :: [[Int]] -> Int -> Int -> Bool
-isValue sgrid value  id = getElementById sgrid id == value
+isValue sgrid value id = getElementById sgrid id == value
 
 countGrid :: [[Int]] -> Int -> Int
 countGrid sgrid value = length $ filter (isValue sgrid value) [0..(binNum-1)]

@@ -17,7 +17,7 @@ unique xs = remove $ sort xs
       | x1 == x2  = remove (x1:xs)
       | otherwise = x1 : remove (x2:xs)
 
-getUnitList :: Int -> Int -> [Int]
+getUnitList :: a -> Int -> [a]
 getUnitList e 0 = []
 getUnitList e n = e : (getUnitList e (n-1))
 

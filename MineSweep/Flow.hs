@@ -13,7 +13,6 @@ import Mine
 import MyRandom
 import Util
 
-
 -- undate all grid value
 initGridValue :: [[Int]] -> [[Int]]
 initGridValue grid = foldl updateGridValueById grid [0..(binNum-1)]
@@ -148,7 +147,7 @@ mineSweep = do
   -- let col = 10
   putStrLn "***** MineSweep *****"
   seed <- newStdGen
-  let vgrid = initGridValue $ initGridWithRandomBomb row col seed
+  let vgrid = initGridValue $ initGridWithRandomBomb row col bombRatio seed
   let sgrid = getBlankGrid row col
   evalState vgrid sgrid
   updateState vgrid sgrid

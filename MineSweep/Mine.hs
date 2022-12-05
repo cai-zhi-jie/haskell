@@ -11,6 +11,23 @@ import Util
 
 {-- %%%%%%%%%%%%%%%% MANUAL MINING %%%%%%%%%%%%%%%%%% --}
 
+-- breadth first search 
+-- state_grid -> value_grid -> id -> updated_state_grid
+bfs :: [[Int]] -> [[Int]] -> [Int] -> [[Int]]
+bfs sgrid vgrid [] = sgrid
+bfs sgrid vgrid (id:ids) 
+  -- for visited id, try next
+  | getElementById sgrid id == visitedId = determineSurrounding vgrid sgrid id -- bfs (determineSurrounding vgrid sgrid id) vgrid ids
+  -- -- for flag id, try next
+  -- | getElementById sgrid id == flagId = bfs sgrid vgrid ids
+  -- for univsited
+  -- for bomb id or value-non-0 id, mark visited and failed
+  | getElementById vgrid id /= 0 = bfs (updateElement sgrid visitedId id) vgrid ids
+  -- for value-eq-0 id, mark visited and search neighbor
+  | otherwise = bfs (updateElement sgrid visitedId id) vgrid (ids ++ neighborId)
+    where
+      neighborId = filter (\x -> not $ elem x ids) $ filter (isNonVisited sgrid) $ getSurroundingId vgrid id
+
 -- wrap up the bfs function
 sweep :: [[Int]] -> [[Int]] -> Int -> [[Int]]
 sweep vgrid sgrid id = bfs sgrid vgrid [id]
