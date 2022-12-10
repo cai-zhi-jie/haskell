@@ -62,6 +62,9 @@ printGrid grid = putStrLn $  (unlines $ reverse $ addSpace $ transferGrid grid)
 printGridByChar :: [[Char]] -> IO()
 printGridByChar grid = putStrLn $  (unlines $ reverse $ addSpace grid)
 
+printOriginGridByChar :: [[Char]] -> IO()
+printOriginGridByChar grid = putStrLn $  (unlines $ addSpace grid)
+
 dispGrid :: [[Int]] -> [[Int]] -> IO()
 dispGrid vgrid sgrid = putStrLn $ (unlines $ reverse $ addSpace $ transferGrid $ maskGrid vgrid sgrid)
 

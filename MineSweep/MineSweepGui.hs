@@ -114,6 +114,8 @@ newGridByState window grid stateButton vgrid sgrid = do
   let row = length sgrid
   let col = length $ sgrid !! 0
 
+  -- printOriginGridByChar $ sideBySide (transferGrid vgrid) (transferGrid sgrid)
+
   grid' <- new Gtk.Grid [ #columnSpacing := 5
                           , #rowSpacing := 5
                           , #rowHomogeneous := True
